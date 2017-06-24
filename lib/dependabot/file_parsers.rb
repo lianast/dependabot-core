@@ -6,6 +6,7 @@ require "dependabot/file_parsers/java_script/yarn"
 require "dependabot/file_parsers/php/composer"
 require "dependabot/file_parsers/git/submodules"
 require "dependabot/file_parsers/docker/docker"
+require "dependabot/file_parsers/elixir/hex"
 
 module Dependabot
   module FileParsers
@@ -18,6 +19,7 @@ module Dependabot
       when "composer" then FileParsers::Php::Composer
       when "submodules" then FileParsers::Git::Submodules
       when "docker" then FileParsers::Docker::Docker
+      when "hex" then FileParsers::Elixir::Hex
       else raise "Unsupported package_manager #{package_manager}"
       end
     end
