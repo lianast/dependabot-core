@@ -25,6 +25,7 @@ the helpers:
 2. `cd helpers/javascript && yarn install && cd -`
 3. `cd helpers/php && composer install && cd -`
 4. `pip install pip==9.0.1`
+5. `cd helpers/elixir && mix deps.get && cd -`
 
 ## Internals
 

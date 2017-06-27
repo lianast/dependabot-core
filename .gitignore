@@ -6,3 +6,5 @@ Gemfile.lock
 /helpers/javascript/node_modules
 vendor
 *.pyc
+/helpers/elixir/deps
+/helpers/elixir/_build
