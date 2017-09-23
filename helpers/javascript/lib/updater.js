@@ -77,7 +77,7 @@ async function updateDependencyFiles(directory, depName, desiredVersion) {
     fs.readFileSync(path.join(directory, fileName)).toString();
   const originalYarnLock = readFile("yarn.lock");
 
-  const flags = { ignoreScripts: true };
+  const flags = { ignoreScripts: true, ignoreEngines: true };
   const reporter = new EventReporter();
   const config = new Config(reporter);
   await config.init({ cwd: directory, nonInteractive: true });
