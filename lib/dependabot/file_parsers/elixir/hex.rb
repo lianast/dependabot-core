@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "dependabot/dependency"
 require "dependabot/file_parsers/base"
 require "dependabot/file_fetchers/elixir/hex"
@@ -13,7 +14,7 @@ module Dependabot
             Dependency.new(
               name: dep["name"],
               version: dep["version"],
-              package_manager: "hex",
+              package_manager: "hex"
             )
           end
         end
