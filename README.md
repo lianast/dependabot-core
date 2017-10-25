@@ -24,7 +24,7 @@ the helpers:
 1. `bundle install`
 2. `cd helpers/javascript && yarn install && cd -`
 3. `cd helpers/php && composer install && cd -`
-4. `pip install pip==9.0.1`
+4. `cd helpers/python && pip install -r requirements.txt`
 
 ## Internals
 

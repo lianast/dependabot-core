@@ -2,6 +2,7 @@
 
 require "dependabot/file_parsers/ruby/bundler"
 require "dependabot/file_parsers/python/pip"
+require "dependabot/file_parsers/python/pipfile"
 require "dependabot/file_parsers/java_script/yarn"
 require "dependabot/file_parsers/php/composer"
 require "dependabot/file_parsers/git/submodules"
@@ -15,6 +16,7 @@ module Dependabot
       when "bundler" then FileParsers::Ruby::Bundler
       when "yarn" then FileParsers::JavaScript::Yarn
       when "pip" then FileParsers::Python::Pip
+      when "pipfile" then FileParsers::Python::Pipfile
       when "composer" then FileParsers::Php::Composer
       when "submodules" then FileParsers::Git::Submodules
       when "docker" then FileParsers::Docker::Docker
