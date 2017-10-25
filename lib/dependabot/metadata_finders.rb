@@ -15,6 +15,7 @@ module Dependabot
       when "bundler" then MetadataFinders::Ruby::Bundler
       when "yarn" then MetadataFinders::JavaScript::Yarn
       when "pip" then MetadataFinders::Python::Pip
+      when "pipfile" then MetadataFinders::Python::Pip
       when "composer" then MetadataFinders::Php::Composer
       when "submodules" then MetadataFinders::Git::Submodules
       when "docker" then MetadataFinders::Docker::Docker
