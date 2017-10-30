@@ -4,6 +4,7 @@ require "dependabot/update_checkers/ruby/bundler"
 require "dependabot/update_checkers/python/pip"
 require "dependabot/update_checkers/java_script/npm"
 require "dependabot/update_checkers/java_script/yarn"
+require "dependabot/update_checkers/java/maven"
 require "dependabot/update_checkers/php/composer"
 require "dependabot/update_checkers/git/submodules"
 require "dependabot/update_checkers/docker/docker"
@@ -16,6 +17,7 @@ module Dependabot
       when "bundler" then UpdateCheckers::Ruby::Bundler
       when "npm" then UpdateCheckers::JavaScript::Npm
       when "yarn" then UpdateCheckers::JavaScript::Yarn
+      when "maven" then UpdateCheckers::Java::Maven
       when "pip" then UpdateCheckers::Python::Pip
       when "composer" then UpdateCheckers::Php::Composer
       when "submodules" then UpdateCheckers::Git::Submodules

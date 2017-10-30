@@ -4,6 +4,7 @@ require "dependabot/file_updaters/ruby/bundler"
 require "dependabot/file_updaters/python/pip"
 require "dependabot/file_updaters/java_script/npm"
 require "dependabot/file_updaters/java_script/yarn"
+require "dependabot/file_updaters/java/maven"
 require "dependabot/file_updaters/php/composer"
 require "dependabot/file_updaters/git/submodules"
 require "dependabot/file_updaters/docker/docker"
@@ -16,6 +17,7 @@ module Dependabot
       when "bundler" then FileUpdaters::Ruby::Bundler
       when "npm" then FileUpdaters::JavaScript::Npm
       when "yarn" then FileUpdaters::JavaScript::Yarn
+      when "maven" then FileUpdaters::Java::Maven
       when "pip" then FileUpdaters::Python::Pip
       when "composer" then FileUpdaters::Php::Composer
       when "submodules" then FileUpdaters::Git::Submodules
