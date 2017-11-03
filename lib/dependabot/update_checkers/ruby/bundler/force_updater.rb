@@ -21,31 +21,12 @@ module Dependabot
           end
 
           # rubocop:disable Metrics/AbcSize
-          # rubocop:disable Metrics/MethodLength
-          # rubocop:disable Metrics/BlockLength
           def force_update
             in_a_temporary_bundler_context do
               unlocked_gems = [dependency.name]
 
               begin
-                definition = ::Bundler::Definition.build(
-                  "Gemfile",
-                  lockfile&.name,
-                  gems: unlocked_gems
-                )
-
-                # Unlock the requirement in the Gemfile / gemspec
-                unlocked_gems.each do |gem_name|
-                  dep     = definition.dependencies.
-                            find { |d| d.name == gem_name }
-                  version = definition.locked_gems.specs.
-                            find { |d| d.name == gem_name }.version
-
-                  dep&.instance_variable_set(
-                    :@requirement,
-                    Gem::Requirement.create(">= #{version}")
-                  )
-                end
+                definition = build_definition(unlocked_gems: unlocked_gems)
 
                 target_dep = definition.dependencies.
                              find { |d| d.name == dependency.name }
@@ -59,10 +40,6 @@ module Dependabot
                 { version: dep.version, unlocked_gems: unlocked_gems }
               rescue ::Bundler::VersionConflict => error
                 # TODO: Not sure this won't unlock way too many things...
-                # TODO: Some way of determining which of the several gems we
-                #       could be doing a multi-update for to do it for. Could
-                #       ignore this problem if all multi-updates generated
-                #       identical PRs (i.e., if unlocking was perfect).
                 to_unlock = error.cause.conflicts.values.flat_map do |conflict|
                   conflict.requirement_trees.map { |r| r.first.name }
                 end
@@ -76,8 +53,6 @@ module Dependabot
             raise Dependabot::DependencyFileNotResolvable, msg
           end
           # rubocop:enable Metrics/AbcSize
-          # rubocop:enable Metrics/MethodLength
-          # rubocop:enable Metrics/BlockLength
 
           private
 
@@ -105,6 +80,32 @@ module Dependabot
                 yield
               end
             end
+          end
+
+          def build_definition(unlocked_gems:)
+            definition = ::Bundler::Definition.build(
+              "Gemfile",
+              lockfile&.name,
+              gems: unlocked_gems
+            )
+
+            # Unlock the requirement in the Gemfile / gemspec
+            unlocked_gems.each do |gem_name|
+              unlock_gem(definition: definition, gem_name: gem_name)
+            end
+
+            definition
+          end
+
+          def unlock_gem(definition:, gem_name:)
+            dep = definition.dependencies.find { |d| d.name == gem_name }
+            version = definition.locked_gems.specs.
+                      find { |d| d.name == gem_name }.version
+
+            dep&.instance_variable_set(
+              :@requirement,
+              Gem::Requirement.create(">= #{version}")
+            )
           end
 
           def gemfile
