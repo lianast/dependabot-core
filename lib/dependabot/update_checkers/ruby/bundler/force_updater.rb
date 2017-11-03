@@ -12,12 +12,12 @@ module Dependabot
     module Ruby
       class Bundler
         class ForceUpdater
-          def initialize(dependency:, dependency_files:, github_access_token:,
+          def initialize(dependency:, dependency_files:, credentials:,
                          target_version:)
-            @dependency = dependency
+            @dependency       = dependency
             @dependency_files = dependency_files
-            @github_access_token = github_access_token
-            @target_version = target_version
+            @credentials      = credentials
+            @target_version   = target_version
           end
 
           # rubocop:disable Metrics/AbcSize
@@ -56,7 +56,7 @@ module Dependabot
 
           private
 
-          attr_reader :dependency, :dependency_files, :github_access_token,
+          attr_reader :dependency, :dependency_files, :credentials,
                       :target_version
 
           #########################
@@ -71,11 +71,13 @@ module Dependabot
                 # Remove installed gems from the default Rubygems index
                 ::Gem::Specification.all = []
 
-                # Set auth details for GitHub
-                ::Bundler.settings.set_command_option(
-                  "github.com",
-                  "x-access-token:#{github_access_token}"
-                )
+                # Set auth details
+                credentials.each do |cred|
+                  ::Bundler.settings.set_command_option(
+                    cred["host"],
+                    cred["token"] || "#{cred['username']}:#{cred['password']}"
+                  )
+                end
 
                 yield
               end

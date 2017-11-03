@@ -11,12 +11,17 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
     described_class.new(
       dependency: dependency,
       dependency_files: dependency_files,
-      github_access_token: github_token,
-      target_version: target_version
+      target_version: target_version,
+      credentials: [
+        {
+          "host" => "github.com",
+          "username" => "x-access-token",
+          "password" => "token"
+        }
+      ]
     )
   end
   let(:dependency_files) { [gemfile, lockfile] }
-  let(:github_token) { "token" }
 
   let(:dependency) do
     Dependabot::Dependency.new(
