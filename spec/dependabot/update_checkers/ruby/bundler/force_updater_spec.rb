@@ -40,16 +40,22 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
     Dependabot::DependencyFile.new(content: lockfile_body, name: "Gemfile.lock")
   end
 
-  # TODO: Stub everything so this isn't required
-  before { WebMock.allow_net_connect! }
-
   describe "#force_update" do
     subject { updater.force_update }
 
     context "when updating the dependency that requires the other" do
-      let(:gemfile_body) do
-        fixture("ruby", "gemfiles", "version_conflict")
+      before do
+        WebMock.disable_net_connect!
+        allow_any_instance_of(Bundler::CompactIndexClient::Updater).
+          to receive(:etag_for).and_return("")
+        stub_request(:get, "https://index.rubygems.org/versions").
+          to_return(status: 200, body: fixture("ruby", "rubygems-index"))
+        stub_request(:get, "https://index.rubygems.org/info/i18n").
+          to_return(status: 200, body: fixture("ruby", "rubygems-info-i18n"))
+        stub_request(:get, "https://index.rubygems.org/info/ibandit").
+          to_return(status: 200, body: fixture("ruby", "rubygems-info-ibandit"))
       end
+      let(:gemfile_body) { fixture("ruby", "gemfiles", "version_conflict") }
       let(:lockfile_body) do
         fixture("ruby", "lockfiles", "version_conflict.lock")
       end
@@ -57,12 +63,13 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
       let(:dependency_name) { "ibandit" }
 
       its([:version]) { is_expected.to eq(Gem::Version.new("0.8.8")) }
-      its([:unlocked_gems]) do
-        is_expected.to match_array(%w(ibandit i18n))
-      end
+      its([:unlocked_gems]) { is_expected.to match_array(%w(ibandit i18n)) }
     end
 
     context "when updating the dependency that is required by the other" do
+      # TODO: Stub everything so this isn't required
+      before { WebMock.allow_net_connect! }
+
       let(:gemfile_body) do
         fixture("ruby", "gemfiles", "version_conflict_rails")
       end
@@ -79,6 +86,9 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
     end
 
     context "when two dependencies require the same subdependency" do
+      # TODO: Stub everything so this isn't required
+      before { WebMock.allow_net_connect! }
+
       let(:gemfile_body) do
         fixture("ruby", "gemfiles", "version_conflict_mutual_sub")
       end
@@ -96,6 +106,18 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
     end
 
     context "when another dependency would need to be downgraded" do
+      before do
+        WebMock.disable_net_connect!
+        allow_any_instance_of(Bundler::CompactIndexClient::Updater).
+          to receive(:etag_for).and_return("")
+        stub_request(:get, "https://index.rubygems.org/versions").
+          to_return(status: 200, body: fixture("ruby", "rubygems-index"))
+        stub_request(:get, "https://index.rubygems.org/info/i18n").
+          to_return(status: 200, body: fixture("ruby", "rubygems-info-i18n"))
+        stub_request(:get, "https://index.rubygems.org/info/ibandit").
+          to_return(status: 200, body: fixture("ruby", "rubygems-info-ibandit"))
+      end
+
       let(:gemfile_body) do
         fixture("ruby", "gemfiles", "version_conflict_requires_downgrade")
       end
