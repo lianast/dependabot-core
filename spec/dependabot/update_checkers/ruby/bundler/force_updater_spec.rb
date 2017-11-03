@@ -45,58 +45,84 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
     Dependabot::DependencyFile.new(content: lockfile_body, name: "Gemfile.lock")
   end
 
+  before do
+    allow_any_instance_of(Bundler::CompactIndexClient::Updater).
+      to receive(:etag_for).and_return("")
+    stub_request(:get, "https://index.rubygems.org/versions").
+      to_return(status: 200, body: fixture("ruby", "rubygems-index"))
+  end
+
   describe "#force_update" do
     subject { updater.force_update }
 
     context "when updating the dependency that requires the other" do
       before do
-        allow_any_instance_of(Bundler::CompactIndexClient::Updater).
-          to receive(:etag_for).and_return("")
-        stub_request(:get, "https://index.rubygems.org/versions").
-          to_return(status: 200, body: fixture("ruby", "rubygems-index"))
-        stub_request(:get, "https://index.rubygems.org/info/i18n").
-          to_return(status: 200, body: fixture("ruby", "rubygems-info-i18n"))
-        stub_request(:get, "https://index.rubygems.org/info/ibandit").
-          to_return(status: 200, body: fixture("ruby", "rubygems-info-ibandit"))
+        info_url = "https://index.rubygems.org/info/"
+        stub_request(:get, info_url + "diff-lcs").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-diff-lcs")
+          )
+        stub_request(:get, info_url + "rspec-mocks").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-mocks")
+          )
+        stub_request(:get, info_url + "rspec-support").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-support")
+          )
       end
       let(:gemfile_body) { fixture("ruby", "gemfiles", "version_conflict") }
       let(:lockfile_body) do
         fixture("ruby", "lockfiles", "version_conflict.lock")
       end
-      let(:target_version) { "0.8.8" }
-      let(:dependency_name) { "ibandit" }
+      let(:target_version) { "3.6.0" }
+      let(:dependency_name) { "rspec-mocks" }
 
-      its([:version]) { is_expected.to eq(Gem::Version.new("0.8.8")) }
-      its([:unlocked_gems]) { is_expected.to match_array(%w(ibandit i18n)) }
+      its([:version]) { is_expected.to eq(Gem::Version.new("3.6.0")) }
+      its([:unlocked_gems]) do
+        is_expected.to match_array(%w(rspec-support rspec-mocks))
+      end
     end
 
     context "when updating the dependency that is required by the other" do
-      # TODO: Stub everything so this isn't required
-      before { WebMock.allow_net_connect! }
-
-      let(:gemfile_body) do
-        fixture("ruby", "gemfiles", "version_conflict_rails")
+      before do
+        info_url = "https://index.rubygems.org/info/"
+        stub_request(:get, info_url + "diff-lcs").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-diff-lcs")
+          )
+        stub_request(:get, info_url + "rspec-mocks").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-mocks")
+          )
+        stub_request(:get, info_url + "rspec-support").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-support")
+          )
       end
+
+      let(:gemfile_body) { fixture("ruby", "gemfiles", "version_conflict") }
       let(:lockfile_body) do
-        fixture("ruby", "lockfiles", "version_conflict_rails.lock")
+        fixture("ruby", "lockfiles", "version_conflict.lock")
       end
-      let(:target_version) { "5.1.4" }
-      let(:dependency_name) { "activesupport" }
+      let(:target_version) { "3.6.0" }
+      let(:dependency_name) { "rspec-support" }
 
-      its([:version]) { is_expected.to eq(Gem::Version.new("5.1.4")) }
+      its([:version]) { is_expected.to eq(Gem::Version.new("3.6.0")) }
       its([:unlocked_gems]) do
-        is_expected.to match_array(%w(activesupport activemodel))
+        is_expected.to match_array(%w(rspec-support rspec-mocks))
       end
     end
 
     context "when two dependencies require the same subdependency" do
       before do
-        allow_any_instance_of(Bundler::CompactIndexClient::Updater).
-          to receive(:etag_for).and_return("")
-
         info_url = "https://index.rubygems.org/info/"
-        stub_request(:get, "https://index.rubygems.org/versions").
-          to_return(status: 200, body: fixture("ruby", "rubygems-index"))
         stub_request(:get, info_url + "diff-lcs").
           to_return(
             status: 200,
@@ -137,10 +163,6 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
 
     context "when another dependency would need to be downgraded" do
       before do
-        allow_any_instance_of(Bundler::CompactIndexClient::Updater).
-          to receive(:etag_for).and_return("")
-        stub_request(:get, "https://index.rubygems.org/versions").
-          to_return(status: 200, body: fixture("ruby", "rubygems-index"))
         stub_request(:get, "https://index.rubygems.org/info/i18n").
           to_return(status: 200, body: fixture("ruby", "rubygems-info-i18n"))
         stub_request(:get, "https://index.rubygems.org/info/ibandit").
