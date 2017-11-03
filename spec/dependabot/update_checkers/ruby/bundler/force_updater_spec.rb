@@ -50,7 +50,6 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
 
     context "when updating the dependency that requires the other" do
       before do
-        WebMock.disable_net_connect!
         allow_any_instance_of(Bundler::CompactIndexClient::Updater).
           to receive(:etag_for).and_return("")
         stub_request(:get, "https://index.rubygems.org/versions").
@@ -91,8 +90,34 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
     end
 
     context "when two dependencies require the same subdependency" do
-      # TODO: Stub everything so this isn't required
-      before { WebMock.allow_net_connect! }
+      before do
+        allow_any_instance_of(Bundler::CompactIndexClient::Updater).
+          to receive(:etag_for).and_return("")
+
+        info_url = "https://index.rubygems.org/info/"
+        stub_request(:get, "https://index.rubygems.org/versions").
+          to_return(status: 200, body: fixture("ruby", "rubygems-index"))
+        stub_request(:get, info_url + "diff-lcs").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-diff-lcs")
+          )
+        stub_request(:get, info_url + "rspec-mocks").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-mocks")
+          )
+        stub_request(:get, info_url + "rspec-expectations").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-expectations")
+          )
+        stub_request(:get, info_url + "rspec-support").
+          to_return(
+            status: 200,
+            body: fixture("ruby", "rubygems-info-rspec-support")
+          )
+      end
 
       let(:gemfile_body) do
         fixture("ruby", "gemfiles", "version_conflict_mutual_sub")
@@ -101,18 +126,17 @@ RSpec.describe Dependabot::UpdateCheckers::Ruby::Bundler::ForceUpdater do
         fixture("ruby", "lockfiles", "version_conflict_mutual_sub.lock")
       end
 
-      let(:dependency_name) { "rspec" }
+      let(:dependency_name) { "rspec-mocks" }
       let(:target_version) { "3.6.0" }
 
       its([:version]) { is_expected.to eq(Gem::Version.new("3.6.0")) }
       its([:unlocked_gems]) do
-        is_expected.to match_array(%w(rspec-rails rspec))
+        is_expected.to match_array(%w(rspec-expectations rspec-mocks))
       end
     end
 
     context "when another dependency would need to be downgraded" do
       before do
-        WebMock.disable_net_connect!
         allow_any_instance_of(Bundler::CompactIndexClient::Updater).
           to receive(:etag_for).and_return("")
         stub_request(:get, "https://index.rubygems.org/versions").
